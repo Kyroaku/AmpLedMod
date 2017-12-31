@@ -1,13 +1,65 @@
 #include "Bluetooth.h"
 
-#define RING_BUFFER_SIZE	644
+#define RING_BUFFER_SIZE	256
 
 #define RING_BUF_AT(i)		(ringBuffer[i%RING_BUFFER_SIZE])
+#define RING_BUF_INC(x)		(x = (x+1)%RING_BUFFER_SIZE)
 
-static uint8_t ringBuffer[RING_BUFFER_SIZE];
+static uint8_t ringBuffer[RING_BUFFER_SIZE] = { 0 };
 static uint8_t ringBufferReadPos = 0;
 static uint8_t ringBufferWritePos = 0;
 static uint8_t ringBufferTmp = 0;
+
+int8_t bluetoothGetFrame(uint8_t *frame)
+{
+	/* Calculate number of bytes in ring buffer. */
+	int len = (int)ringBufferWritePos - ringBufferReadPos;
+	if(len < 0) {
+		len += RING_BUFFER_SIZE;
+	}
+	if(len < 2) {
+		return 0;
+	}
+	
+	/* We need to read first to bytes, to know length of the frame. */
+	while(len >= 2)
+	{
+		/* Look for start byte. */
+		if(RING_BUF_AT(ringBufferReadPos) == 0xFF) {
+			/* Check if whole frame is in ring buffer. */
+			if(len-2 >= RING_BUF_AT(ringBufferReadPos+1)) {
+				break;
+			} else {
+				/* Frame is not received yet. */
+				return 0;
+			}
+		} else {
+			RING_BUF_INC(ringBufferReadPos);
+			len--;
+		}
+	}
+	
+	len = RING_BUF_AT(ringBufferReadPos+1);
+	uint8_t checksum = len;
+	RING_BUF_INC(ringBufferReadPos);
+	RING_BUF_INC(ringBufferReadPos);
+	frame[0] = RING_BUF_AT(ringBufferReadPos+0);
+	frame[1] = RING_BUF_AT(ringBufferReadPos+1);
+	frame[2] = RING_BUF_AT(ringBufferReadPos+2);
+	for(int i = 0; i < len-1; i++)
+	{
+		checksum += RING_BUF_AT(ringBufferReadPos);
+		RING_BUF_INC(ringBufferReadPos);
+	}
+	if(checksum == RING_BUF_AT(ringBufferReadPos)) {
+		RING_BUF_INC(ringBufferReadPos);
+		return 1;
+	} else {
+		RING_BUF_INC(ringBufferReadPos);
+		return 0;
+	}
+		
+}
 
 ISR(USART_RX_vect)
 {
@@ -17,26 +69,6 @@ ISR(USART_RX_vect)
 		ringBuffer[ringBufferWritePos] = UDR0;
 		ringBufferWritePos = ringBufferTmp;
 	}
-}
-
-int8_t ringBufGetFrame(uint8_t *frame)
-{
-	int len = (int)ringBufferWritePos - ringBufferReadPos;
-	if(len < 0)
-		len += RING_BUFFER_SIZE;
-	if(len >= 6 &&
-		RING_BUF_AT(ringBufferReadPos+1) == 0 &&
-		RING_BUF_AT(ringBufferReadPos+3) == 0 &&
-		RING_BUF_AT(ringBufferReadPos+5) == 0)
-	{
-		frame[0] = RING_BUF_AT(ringBufferReadPos+0);
-		frame[1] = RING_BUF_AT(ringBufferReadPos+2);
-		frame[2] = RING_BUF_AT(ringBufferReadPos+4);
-		ringBufferReadPos = (ringBufferReadPos+6) % RING_BUFFER_SIZE;
-		return 1;
-	}
-	else
-		return 0;
 }
 
 void bluetoothInit(unsigned int baudrate)
@@ -61,7 +93,7 @@ void bluetoothSend(unsigned char c)
 void bluetoothSendStr(const char *buf)
 {
 	while(*buf)
-		bluetoothSend(*buf++);
+	bluetoothSend(*buf++);
 }
 
 unsigned char bluetoothRecv(void)
@@ -73,13 +105,13 @@ unsigned char bluetoothRecv(void)
 void bluetoothRecvStr(char *buf, int len)
 {
 	for(int i = 0; *buf && i<len; i++)
-		*buf++ = bluetoothRecv();
+	*buf++ = bluetoothRecv();
 }
 
 void bluetoothRecvData(char *buf, int len)
 {
 	for(int i = 0; i<len; i++)
-		*buf++ = bluetoothRecv();
+	*buf++ = bluetoothRecv();
 }
 
 void bluetoothSetATSettings(void)

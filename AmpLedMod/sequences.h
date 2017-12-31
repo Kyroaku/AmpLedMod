@@ -11,7 +11,7 @@
 
 #include "ws2812b.h"
 
-#define SEQ_MAX_COLORS			(8)		/**< Maximum number of colors in sequence. */
+#define SEQ_MAX_COLORS			(64)		/**< Maximum number of colors in sequence. */
 
 typedef void (*seqFunction_t)(color_t*, int);
 

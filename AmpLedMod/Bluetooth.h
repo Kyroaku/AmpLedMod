@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include <avr/interrupt.h>
 
-int8_t ringBufGetFrame(uint8_t *frame);
+int8_t bluetoothGetFrame(uint8_t *frame);
 
 /**
  * Initializes USART with 8 bit size data, no parity, 1 bit stop.
