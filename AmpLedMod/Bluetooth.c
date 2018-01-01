@@ -10,8 +10,9 @@ static uint8_t ringBufferReadPos = 0;
 static uint8_t ringBufferWritePos = 0;
 static uint8_t ringBufferTmp = 0;
 
-int8_t bluetoothGetFrame(uint8_t *frame)
+int8_t bluetoothGetFrame(void *frame, uint8_t max_len)
 {
+	uint8_t *data = frame;
 	/* Calculate number of bytes in ring buffer. */
 	int len = (int)ringBufferWritePos - ringBufferReadPos;
 	if(len < 0) {
@@ -40,15 +41,18 @@ int8_t bluetoothGetFrame(uint8_t *frame)
 	}
 	
 	len = RING_BUF_AT(ringBufferReadPos+1);
+	RING_BUF_INC(ringBufferReadPos);
+	RING_BUF_INC(ringBufferReadPos);
+	if(len > max_len)
+		return 0;
+	
 	uint8_t checksum = len;
-	RING_BUF_INC(ringBufferReadPos);
-	RING_BUF_INC(ringBufferReadPos);
-	frame[0] = RING_BUF_AT(ringBufferReadPos+0);
-	frame[1] = RING_BUF_AT(ringBufferReadPos+1);
-	frame[2] = RING_BUF_AT(ringBufferReadPos+2);
-	for(int i = 0; i < len-1; i++)
+	uint8_t tmp;
+	for(int i = 0; i < len; i++)
 	{
-		checksum += RING_BUF_AT(ringBufferReadPos);
+		tmp = RING_BUF_AT(ringBufferReadPos);
+		checksum += tmp;
+		data[i] = tmp;
 		RING_BUF_INC(ringBufferReadPos);
 	}
 	if(checksum == RING_BUF_AT(ringBufferReadPos)) {
@@ -58,7 +62,6 @@ int8_t bluetoothGetFrame(uint8_t *frame)
 		RING_BUF_INC(ringBufferReadPos);
 		return 0;
 	}
-		
 }
 
 ISR(USART_RX_vect)

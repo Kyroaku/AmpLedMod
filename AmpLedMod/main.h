@@ -17,4 +17,22 @@
 #include "Bluetooth.h"
 #include "sequences.h"
 
+// ----------------------------------------------------------------------- DEFINES
+
+#define MAX_LEDS	40				/**< Maximum number of ws2812b physical leds. */
+
+typedef enum
+{
+	eSetAnimation = 0,
+	eSetAnimationColors,
+	eSetAnimationSpeed,
+	eSetLedsCount
+} command_t;
+
+typedef struct 
+{
+	uint8_t command;				/**< Command for driver. @see command_t. */
+	uint8_t data[MAX_LEDS*3+1];		/**< Parameters for command (MAX_LEDS*3+1) is the maximum length of data. */
+} frame_t;
+
 #endif /* MAIN_H_ */
