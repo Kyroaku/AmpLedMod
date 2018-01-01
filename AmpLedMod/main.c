@@ -45,17 +45,11 @@ int main(void)
 		
 		/* Update color array (animate). */
 		seqUpdate(leds, NUM_LEDS);
-		
-		int8_t s = 0;
-		s = bluetoothGetFrame(frame);
-		if(s) {
+		 
+		if(bluetoothGetFrame(frame)) {
 			/* New frame received. */
-			if(s == 123)
-			seqSetColorRGB(0, 1,1,1);
-			else
 			seqSetColorRGB(0, frame[0], frame[1], frame[2]);
 		}
-		
 		/* Delay to reach appropiate animation speed. */
 		/* Minimum 50us is needed for ws2812b.*/
 		_delay_ms(10);
