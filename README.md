@@ -1,5 +1,7 @@
 # AmpLedMod
 
+![bugera333](https://github.com/Kyroaku/AmpLedMod/blob/master/Content/bugera333.jpg)
+
 ## General info
 This is the driver for LEDs that I have added to my guitar amplifier (Bugera 333 head). Driver has implemented couple of animations. User can choose and customize each animation by smartphone with Android OS and Bluetooth.
 
