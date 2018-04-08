@@ -38,6 +38,7 @@ SUBDIRS :=
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../Bluetooth.c \
+../Lcd.c \
 ../main.c \
 ../sequences.c \
 ../ws2812b.c
@@ -51,24 +52,28 @@ ASM_SRCS +=
 
 OBJS +=  \
 Bluetooth.o \
+Lcd.o \
 main.o \
 sequences.o \
 ws2812b.o
 
 OBJS_AS_ARGS +=  \
 Bluetooth.o \
+Lcd.o \
 main.o \
 sequences.o \
 ws2812b.o
 
 C_DEPS +=  \
 Bluetooth.d \
+Lcd.d \
 main.d \
 sequences.d \
 ws2812b.d
 
 C_DEPS_AS_ARGS +=  \
 Bluetooth.d \
+Lcd.d \
 main.d \
 sequences.d \
 ws2812b.d
@@ -87,6 +92,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

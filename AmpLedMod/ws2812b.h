@@ -13,9 +13,13 @@
 #include <util/delay.h>
 #include <ctype.h>
 
+// ----------------------------------------------------------------------- Defines
+
 #define WS_DDR		(DDRD)
 #define WS_PORT		(PORTD)
 #define WS_BIT		(1<<PD3)
+
+// ----------------------------------------------------------------------- Structures
 
 typedef struct
 {
@@ -27,6 +31,8 @@ typedef union
 	rgb_t rgb;
 	uint_fast32_t val;
 } color_t;
+
+// ----------------------------------------------------------------------- Declarations
 
 void wsInit();
 void wsSend(color_t *leds, int num_leds);

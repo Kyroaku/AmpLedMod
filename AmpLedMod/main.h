@@ -16,10 +16,13 @@
 #include "ws2812b.h"
 #include "Bluetooth.h"
 #include "sequences.h"
+#include "Lcd.h"
 
-// ----------------------------------------------------------------------- DEFINES
+// ----------------------------------------------------------------------- Defines
 
 #define MAX_LEDS	40				/**< Maximum number of ws2812b physical leds. */
+
+// ----------------------------------------------------------------------- Structures
 
 typedef enum
 {

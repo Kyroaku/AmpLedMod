@@ -5,27 +5,47 @@
 * Author : Marcin Dziedzic
 */
 
+#include <string.h>
+
 #include "main.h"
 
-// ----------------------------------------------------------------------- DEFINES
+// ----------------------------------------------------------------------- Defines
 
-// ----------------------------------------------------------- STATIC DECLARATIONS
+// ----------------------------------------------------------------------- Static declarations
 
 static color_t leds[MAX_LEDS];		/**< Array of colors for each physical rgb led. */
-static uint8_t numLeds = 39;		/**< Actual number of ws2812b physical leds. */
+static uint8_t numLeds = 21;		/**< Actual number of ws2812b physical leds. */
 
 static void handleFrame(frame_t *frame);
 
-// ------------------------------------------------------------------- DEFINITIONS
+// ----------------------------------------------------------------------- Definitions
 
 int main(void)
 {
+	lcdInit();
+	/* Set 4 bit data. */
+	lcdFunctionSet(eLcd8Bits, eLcd2Lines, eLcdFont5x8);
+	/* Entry mode (incremental). */
+	lcdSetEntryMode(eLcdRight, eDisabled);
+	/* Clear display. */
+	lcdClear();
+	/* Display on, cursor on, blink on. */
+	lcdSetDisplay(eEnabled, eEnabled, eEnabled);
+	
+	char *str = "Hello World!";
+	lcdPrintStr(str);
+	lcdSetEntryMode(1, 1);
+	
+	int len = strlen(str);
+	while(1) {
+		for(int i = 0; i < len; i++) {
+			lcdPrintChar(str[i]);
+			_delay_ms(500);
+		}
+	}
+	
 	/* Buffer for frame received from controller. */
 	frame_t frame;
-	
-	/* Debug pin indicating that whether module is running. */
-	DDRC |= (1<<PC5);
-	PORTC |= (1<<PC5);
 	
 	/* Reset leds colors. */
 	for(int i = 0; i < MAX_LEDS; i++)
@@ -58,6 +78,8 @@ int main(void)
 		_delay_ms(10);
 	}
 }
+
+// ----------------------------------------------------------------------- Static declarations
 
 static void handleFrame(frame_t *frame)
 {

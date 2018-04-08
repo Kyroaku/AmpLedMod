@@ -11,9 +11,13 @@
 
 #include "ws2812b.h"
 
+// ----------------------------------------------------------------------- Defines
+
 #define SEQ_MAX_COLORS			(64)		/**< Maximum number of colors in sequence. */
 
 typedef void (*seqFunction_t)(color_t*, int);
+
+// ----------------------------------------------------------------------- Structures
 
 /**
  * Defines animation type for leds.
@@ -27,6 +31,8 @@ typedef enum
 	eSeqStaticColor,
 	eSeqCount /**< Specifies the number of animations. Must be at the end. */
 } seqType_t;
+
+// ----------------------------------------------------------------------- Declarations
 
 /**
  * Sets new leds animation type.

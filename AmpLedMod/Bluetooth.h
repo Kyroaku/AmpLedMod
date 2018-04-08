@@ -6,6 +6,8 @@
 #include <ctype.h>
 #include <avr/interrupt.h>
 
+// ----------------------------------------------------------------------- Declarations
+
 int8_t bluetoothGetFrame(void *frame, uint8_t max_len);
 
 /**

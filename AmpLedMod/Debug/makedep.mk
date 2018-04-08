@@ -4,6 +4,8 @@
 
 Bluetooth.c
 
+Lcd.c
+
 main.c
 
 sequences.c

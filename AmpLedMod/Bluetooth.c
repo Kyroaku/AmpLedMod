@@ -1,14 +1,20 @@
 #include "Bluetooth.h"
 
+// ----------------------------------------------------------------------- Defines
+
 #define RING_BUFFER_SIZE	256
 
 #define RING_BUF_AT(i)		(ringBuffer[i%RING_BUFFER_SIZE])
 #define RING_BUF_INC(x)		(x = (x+1)%RING_BUFFER_SIZE)
 
+// ----------------------------------------------------------------------- Static declarations
+
 static uint8_t ringBuffer[RING_BUFFER_SIZE] = { 0 };
 static uint8_t ringBufferReadPos = 0;
 static uint8_t ringBufferWritePos = 0;
 static uint8_t ringBufferTmp = 0;
+
+// ----------------------------------------------------------------------- Definitions
 
 int8_t bluetoothGetFrame(void *frame, uint8_t max_len)
 {

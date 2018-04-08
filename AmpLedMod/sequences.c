@@ -7,9 +7,9 @@
 
 #include "sequences.h"
 
-// ----------------------------------------------------------------------- DEFINES
+// ----------------------------------------------------------------------- Defines
 
-// ----------------------------------------------------------- STATIC DECLARATIONS
+// ----------------------------------------------------------------------- Static declarations
 
 static void seqPingPongFunc(color_t *leds, int num_leds);
 static void seqDoublePingPongFunc(color_t *leds, int num_leds);
@@ -30,7 +30,7 @@ static seqFunction_t functions[eSeqCount] = {
 };
 static seqType_t seqType = eSeqPingPong;
 
-// ------------------------------------------------------------------- DEFINITIONS
+// ----------------------------------------------------------------------- Definitions
 
 void seqSetFunction(seqType_t type)
 {
@@ -82,7 +82,7 @@ void seqSetColorCount(uint8_t num)
 	numColors = num;
 }
 
-// ------------------------------------------------------------ STATIC DEFINITIONS
+// ----------------------------------------------------------------------- Static definitions
 
 static void seqPingPongFunc(color_t *leds, int num_leds)
 {
