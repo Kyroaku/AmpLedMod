@@ -7,6 +7,8 @@
 
 #include "sequences.h"
 
+#include <math.h>
+
 // ----------------------------------------------------------------------- Defines
 
 // ----------------------------------------------------------------------- Static declarations
@@ -16,25 +18,64 @@ static void seqDoublePingPongFunc(color_t *leds, int num_leds);
 static void seqFadeFunc(color_t *leds, int num_leds);
 static void seqSoftSwitchFunc(color_t *leds, int num_leds);
 static void seqStaticColor(color_t *leds, int num_leds);
+static void seqRunning2(color_t *leds, int num_leds);
+static void seqParticles(color_t *leds, int num_leds);
+static void seqParticlesDark(color_t *leds, int num_leds);
 
-static uint8_t numColors = 7;
+static uint8_t seqSpeed = 10;			/**< Sequence speed: 0-100. */
+static uint8_t seqSoftness = 10;		/**< Sequence softness: 0-100. */
+static uint8_t seqSize = 10;			/**< Sequence size: 0-20. */
+static uint8_t numColors = 7;			/**< Number of colors in sequences: 0-SEQ_MAX_COLORS. */
+
+/**
+* Array of colors used in animations.
+*/
 static uint32_t colors[SEQ_MAX_COLORS] = {
-	0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFFFFFF
+	0x00FF00, 0x00FFFF, 0x0000FF, 0xFFFF00, 0xFF0000, 0xFF00FF, 0xFFFFFF
 };
+
+/**
+* Array of animation algorithm functions.
+*/
 static seqFunction_t functions[eSeqCount] = {
 	seqPingPongFunc,
 	seqDoublePingPongFunc,
 	seqFadeFunc,
 	seqSoftSwitchFunc,
-	seqStaticColor
+	seqStaticColor,
+	seqRunning2,
+	seqParticles,
+	seqParticlesDark
 };
-static seqType_t seqType = eSeqPingPong;
+
+static seqType_t seqType = eSeqParticles;	/**< Current animation type. */
 
 // ----------------------------------------------------------------------- Definitions
 
 void seqSetFunction(seqType_t type)
 {
 	seqType = type;
+}
+
+void seqSetSpeed(uint8_t speed)
+{
+	if(speed > SEQ_MAX_SPEED) seqSpeed = SEQ_MAX_SPEED;
+	else if(speed < SEQ_MIN_SPEED) seqSpeed = SEQ_MIN_SPEED;
+	else seqSpeed = speed;
+}
+
+void seqSetSoftness(uint8_t softness)
+{
+	if(softness > SEQ_MAX_SOFTNESS) seqSoftness = SEQ_MAX_SOFTNESS;
+	else if(softness < SEQ_MIN_SOFTNESS) seqSoftness = SEQ_MIN_SOFTNESS;
+	else seqSoftness = softness;
+}
+
+void seqSetSize(uint8_t size)
+{
+	if(size > SEQ_MAX_SIZE) seqSize = SEQ_MAX_SIZE;
+	else if(size < SEQ_MIN_SIZE) seqSize = SEQ_MIN_SIZE;
+	seqSize = size;
 }
 
 void seqUpdate(color_t *leds, int num_leds)
@@ -90,17 +131,17 @@ static void seqPingPongFunc(color_t *leds, int num_leds)
 	static int8_t led_dir = 0;
 	static uint8_t color_i = 0;
 	static uint8_t timer = 0;
-	static uint8_t softness = 10;
+	
+	uint8_t softness = seqSoftness;
 	
 	timer++;
-	if(timer < 2) return;
+	if(timer < 100/seqSpeed) return;
 	else timer = 0;
-	
-	//leds[led_i].val = colors[seq_i];
 	
 	for(int i = 0; i < softness; i++)
 	{
 		float k = (float)(i+1)/softness;
+		k=k*k;
 		if(!led_dir) {
 			if(led_i-i < 0 || led_i-i >= num_leds) continue;
 			leds[led_i-i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.r;
@@ -130,14 +171,12 @@ static void seqDoublePingPongFunc(color_t *leds, int num_leds)
 	static int8_t led_dir = 0;
 	static uint8_t color_i = 0;
 	static uint8_t timer = 0;
-	static uint8_t softness = 10;
+	
+	uint8_t softness = seqSoftness;
 	
 	timer++;
-	if(timer < 2) return;
+	if(timer < 100/seqSpeed) return;
 	else timer = 0;
-	
-	//leds[led_i].val = colors[seq_i];
-	//leds[num_leds-1-led_i].val = colors[seq_i];
 	
 	for(int i = 0; i < softness; i++)
 	{
@@ -176,11 +215,11 @@ static void seqDoublePingPongFunc(color_t *leds, int num_leds)
 static void seqFadeFunc(color_t *leds, int num_leds)
 {
 	static uint8_t color_i = 0;
-	static uint8_t timer = 0;
-	static uint8_t time = 50;
 	static int8_t led_dir = 0;
+	static float k = 0.0f;
 	
-	float k = (float)timer/time;
+	float speed = seqSpeed / 5000.0f;
+	
 	for(int i = 0; i < num_leds; i++)
 	{
 		leds[i].rgb.r = k*((colors[color_i]>>0)&0xFF);
@@ -188,25 +227,26 @@ static void seqFadeFunc(color_t *leds, int num_leds)
 		leds[i].rgb.b = k*((colors[color_i]>>16)&0xFF);
 	}
 	
-	if(!led_dir)
-	timer++;
-	else
-	timer--;
-	if(timer >= time)
-	led_dir = 1;
-	if(timer <= 0 && led_dir) {
+	if(!led_dir) k+=speed;
+	else k-=speed;
+	if(k >= 1.0f) {
+		led_dir = 1;
+		k = 1.0f;
+	}
+	if(k <= 0.0f && led_dir) {
 		color_i = (color_i+1)%numColors;
 		led_dir = 0;
+		k = 0.0f;
 	}
 }
 
 static void seqSoftSwitchFunc(color_t *leds, int num_leds)
 {
 	static uint8_t color_i = 0;
-	static uint8_t timer = 0;
-	static uint8_t time = 50;
+	static float k = 0.0f;
 	
-	float k = (float)timer/time;
+	float speed = seqSpeed / 5000.0f;
+	
 	for(int i = 0; i < num_leds; i++)
 	{
 		leds[i].rgb.r = (1.0f-k)*((colors[color_i]>>0)&0xFF) + k*((colors[(color_i+1)%numColors]>>0)&0xFF);
@@ -214,10 +254,10 @@ static void seqSoftSwitchFunc(color_t *leds, int num_leds)
 		leds[i].rgb.b = (1.0f-k)*((colors[color_i]>>16)&0xFF) + k*((colors[(color_i+1)%numColors]>>16)&0xFF);
 	}
 	
-	timer++;
-	if(timer > time) {
+	k += speed;
+	if(k >= 1.0f) {
 		color_i = (color_i+1)%numColors;
-		timer = 0;
+		k = 0;
 	}
 }
 
@@ -225,4 +265,125 @@ static void seqStaticColor(color_t *leds, int num_leds)
 {
 	for(int i = 0; i < num_leds; i++)
 	leds[i].val = colors[0];
+}
+
+static void seqRunning2(color_t *leds, int num_leds)
+{
+	static float pos = 0;
+	
+	float speed = seqSpeed / 500.0f;
+	float size = seqSize;
+	
+	for(int i = 0; i < num_leds; i++)
+	{
+		float a = i*(1.0f/size)+pos;
+		float k = (sin(a)+1.0f) * 0.5f;
+		
+		leds[i].rgb.r = k*((colors[0]>>0)&0xFF) +  (1.0f-k)*((colors[1]>>0)&0xFF);
+		leds[i].rgb.g = k*((colors[0]>>8)&0xFF) +  (1.0f-k)*((colors[1]>>8)&0xFF);
+		leds[i].rgb.b = k*((colors[0]>>16)&0xFF) +  (1.0f-k)*((colors[1]>>16)&0xFF);
+	}
+	
+	pos += speed;
+	if(pos > 2*M_PI)
+	pos -= 2*M_PI;
+}
+
+static void seqParticles(color_t *leds, int num_leds)
+{
+	static float pos = 0;
+	static int length = 0;
+	static int color_id = 0;
+	static uint8_t decremented = 0;
+	
+	float speed = seqSpeed / 50.0f;
+	float size = seqSize;
+	
+	if(length <= 0) {
+		length = num_leds;
+		color_id = (color_id+1) % numColors;
+	}
+	
+	for(int i = 0; i < length; i++) {
+		float dist = pos-i;
+		dist = dist < 0 ? -dist : dist;
+		if(dist < size) {
+			float k = dist / size;
+			leds[i].rgb.r = k*((colors[color_id]>>0)&0xFF) + (1.0f-k)*((colors[(color_id+1)%numColors]>>0)&0xFF);
+			leds[i].rgb.g = k*((colors[color_id]>>8)&0xFF) + (1.0f-k)*((colors[(color_id+1)%numColors]>>8)&0xFF);
+			leds[i].rgb.b = k*((colors[color_id]>>16)&0xFF) + (1.0f-k)*((colors[(color_id+1)%numColors]>>16)&0xFF);
+			} else {
+			leds[i].rgb.r = ((colors[color_id]>>0)&0xFF);
+			leds[i].rgb.g = ((colors[color_id]>>8)&0xFF);
+			leds[i].rgb.b = ((colors[color_id]>>16)&0xFF);
+		}
+	}
+	
+	for(int i = length; i < num_leds; i++) {
+		leds[i].rgb.r = ((colors[(color_id+1)%numColors]>>0)&0xFF);
+		leds[i].rgb.g = ((colors[(color_id+1)%numColors]>>8)&0xFF);
+		leds[i].rgb.b = ((colors[(color_id+1)%numColors]>>16)&0xFF);
+	}
+	
+	pos += speed;
+	if(pos >= length) {
+		if(!decremented) {
+			length--;
+			decremented = 1;
+		}
+		if(pos >= length+size) {
+			pos = -size;
+			decremented = 0;
+		}
+	}
+}
+
+static void seqParticlesDark(color_t *leds, int num_leds)
+{
+	static float pos = 0;
+	static int length = 0;
+	static int color_id = 0;
+	static uint8_t decremented = 0;
+	
+	float speed = seqSpeed / 50.0f;
+	float size = seqSize;
+	
+	if(length <= 0) {
+		length = num_leds;
+		color_id = (color_id+1) % numColors;
+	}
+	
+	for(int i = 0; i < length; i++) {
+		float dist = pos-i;
+		dist = dist < 0 ? -dist : dist;
+		if(dist < size) {
+			float k = dist / size;
+			leds[i].rgb.r = (1.0f-k)*((colors[(color_id+1)%numColors]>>0)&0xFF);
+			leds[i].rgb.g = (1.0f-k)*((colors[(color_id+1)%numColors]>>8)&0xFF);
+			leds[i].rgb.b = (1.0f-k)*((colors[(color_id+1)%numColors]>>16)&0xFF);
+		}
+		else {
+			leds[i].rgb.r = 0;
+			leds[i].rgb.g = 0;
+			leds[i].rgb.b = 0;
+		}
+	}
+	
+	for(int i = length; i < num_leds; i++) {
+		leds[i].rgb.r = ((colors[(color_id+1)%numColors]>>0)&0xFF);
+		leds[i].rgb.g = ((colors[(color_id+1)%numColors]>>8)&0xFF);
+		leds[i].rgb.b = ((colors[(color_id+1)%numColors]>>16)&0xFF);
+	}
+	
+	pos += speed;
+	if(pos >= length) {
+		if(!decremented) {
+			length--;
+			decremented = 1;
+		}
+		if(pos >= length+size) {
+			pos = -size;
+			decremented = 0;
+		}
+	}
 }

@@ -116,15 +116,6 @@
     <Compile Include="Bluetooth.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Lcd.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Lcd.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="LcdConfig.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>

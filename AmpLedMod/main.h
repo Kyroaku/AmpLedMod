@@ -16,11 +16,10 @@
 #include "ws2812b.h"
 #include "Bluetooth.h"
 #include "sequences.h"
-#include "Lcd.h"
 
 // ----------------------------------------------------------------------- Defines
 
-#define MAX_LEDS	40				/**< Maximum number of ws2812b physical leds. */
+#define MAX_LEDS	120				/**< Maximum number of ws2812b physical leds. */
 
 // ----------------------------------------------------------------------- Structures
 
@@ -29,13 +28,16 @@ typedef enum
 	eSetAnimation = 0,
 	eSetAnimationColors,
 	eSetAnimationSpeed,
-	eSetLedsCount
+	eSetLedsCount,
+	eSetAnimationSoftness,
+	eSetAnimationSize,
+	eSetAll
 } command_t;
 
 typedef struct 
 {
-	uint8_t command;				/**< Command for driver. @see command_t. */
-	uint8_t data[MAX_LEDS*3+1];		/**< Parameters for command (MAX_LEDS*3+1) is the maximum length of data. */
+	uint8_t command;					/**< Command for driver. @see command_t. */
+	uint8_t data[SEQ_MAX_COLORS*3+1];	/**< Parameters for command (SEQ_MAX_COLORS*3+1) is the maximum length of data. */
 } frame_t;
 
 #endif /* MAIN_H_ */

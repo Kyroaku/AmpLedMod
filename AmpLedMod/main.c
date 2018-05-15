@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------- Static declarations
 
 static color_t leds[MAX_LEDS];		/**< Array of colors for each physical rgb led. */
-static uint8_t numLeds = 21;		/**< Actual number of ws2812b physical leds. */
+static uint8_t numLeds = 39;		/**< Actual number of ws2812b physical leds. */
 
 static void handleFrame(frame_t *frame);
 
@@ -22,28 +22,6 @@ static void handleFrame(frame_t *frame);
 
 int main(void)
 {
-	lcdInit();
-	/* Set 4 bit data. */
-	lcdFunctionSet(eLcd8Bits, eLcd2Lines, eLcdFont5x8);
-	/* Entry mode (incremental). */
-	lcdSetEntryMode(eLcdRight, eDisabled);
-	/* Clear display. */
-	lcdClear();
-	/* Display on, cursor on, blink on. */
-	lcdSetDisplay(eEnabled, eEnabled, eEnabled);
-	
-	char *str = "Hello World!";
-	lcdPrintStr(str);
-	lcdSetEntryMode(1, 1);
-	
-	int len = strlen(str);
-	while(1) {
-		for(int i = 0; i < len; i++) {
-			lcdPrintChar(str[i]);
-			_delay_ms(500);
-		}
-	}
-	
 	/* Buffer for frame received from controller. */
 	frame_t frame;
 	
@@ -56,9 +34,6 @@ int main(void)
 	
 	/* Init ws2812b driver. */
 	wsInit();
-	
-	/* Seq leds animation. */
-	seqSetFunction(eSeqPingPong);
 	
 	while (1)
 	{
@@ -75,7 +50,7 @@ int main(void)
 		}
 		/* Delay to reach appropiate animation speed. */
 		/* Minimum 50us is needed for ws2812b.*/
-		_delay_ms(10);
+		_delay_ms(2);
 	}
 }
 
@@ -97,10 +72,26 @@ static void handleFrame(frame_t *frame)
 		break;
 		
 		case eSetAnimationSpeed:
+		seqSetSpeed(frame->data[0]);
+		break;
+		
+		case eSetAnimationSoftness:
+		seqSetSoftness(frame->data[0]);
+		break;
+		
+		case eSetAnimationSize:
+		seqSetSize(frame->data[0]);
 		break;
 		
 		case eSetLedsCount:
 		numLeds = frame->data[0];
+		break;
+		
+		case eSetAll:
+		seqSetFunction(frame->data[0]);
+		seqSetSpeed(frame->data[1]);
+		seqSetSoftness(frame->data[2]);
+		seqSetSize(frame->data[3]);
 		break;
 	}
 }
