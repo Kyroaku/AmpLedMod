@@ -24,8 +24,8 @@ static void seqParticlesDark(color_t *leds, int num_leds);
 static void seqRunningParticle(color_t *leds, int num_leds);
 
 static uint8_t seqSpeed = 50;			/**< Sequence speed: 0-100. */
-static uint8_t seqSoftness = 5;		/**< Sequence softness: 0-100. */
-static uint8_t seqSize = 5;			/**< Sequence size: 0-20. */
+static uint8_t seqSoftness = 3;		/**< Sequence softness: 0-100. */
+static uint8_t seqSize = 2;			/**< Sequence size: 0-20. */
 static uint8_t numColors = 7;			/**< Number of colors in sequences: 0-SEQ_MAX_COLORS. */
 
 /**
@@ -291,11 +291,6 @@ static void seqParticles(color_t *leds, int num_leds)
 	float speed = seqSpeed / 50.0f;
 	float size = seqSize;
 	
-	if(length <= 0) {
-		length = num_leds;
-		color_id = (color_id+1) % numColors;
-	}
-	
 	for(int i = 0; i < length; i++) {
 		float dist = pos-i;
 		dist = dist < 0 ? -dist : dist;
@@ -326,6 +321,11 @@ static void seqParticles(color_t *leds, int num_leds)
 		if(pos >= length+size) {
 			pos = -size;
 			decremented = 0;
+			
+			if(length <= 0) {
+				length = num_leds;
+				color_id = (color_id+1) % numColors;
+			}
 		}
 	}
 }
@@ -339,11 +339,6 @@ static void seqParticlesDark(color_t *leds, int num_leds)
 	
 	float speed = seqSpeed / 50.0f;
 	float size = seqSize;
-	
-	if(length <= 0) {
-		length = num_leds;
-		color_id = (color_id+1) % numColors;
-	}
 	
 	for(int i = 0; i < length; i++) {
 		float dist = pos-i;
@@ -376,6 +371,11 @@ static void seqParticlesDark(color_t *leds, int num_leds)
 		if(pos >= length+size) {
 			pos = -size;
 			decremented = 0;
+			
+			if(length <= 0) {
+				length = num_leds;
+				color_id = (color_id+1) % numColors;
+			}
 		}
 	}
 }
@@ -391,23 +391,21 @@ static void seqRunningParticle(color_t *leds, int num_leds)
 	
 	for(int i = 0; i < num_leds; i++)
 	{
-		int p = (int)(pos+size) % num_leds;
-		if((i >= (int)pos && i < (int)(pos+size)) ||
-			((int)(pos+size) > num_leds && i < p))
-		{
-			leds[i].rgb.r = ((colors[color_id]>>0)&0xFF);
-			leds[i].rgb.g = ((colors[color_id]>>8)&0xFF);
-			leds[i].rgb.b = ((colors[color_id]>>16)&0xFF);
-		}
-		else
-		{
-			leds[i].rgb.r = 0;
-			leds[i].rgb.g = 0;
-			leds[i].rgb.b = 0;
-		}
+		float k;
+		float d = i - pos;
+		float d2 = i + num_leds - pos;
+		d = d < 0.0f ? -d : d;
+		if(d < size || d2 < size) k = 1.0f;
+		else if(d < size + softness) k = (size + softness - d) / (float)softness;
+		else if(d2 < size + softness) k = (size + softness - d2) / (float)softness;
+		else k = 0.0f;
+		
+		leds[i].rgb.r = k*((colors[color_id]>>0)&0xFF);
+		leds[i].rgb.g = k*((colors[color_id]>>8)&0xFF);
+		leds[i].rgb.b = k*((colors[color_id]>>16)&0xFF);
 	}
 	
 	pos += speed;
-	if(pos >= num_leds)
-		pos = 0;
+	if(pos >= num_leds + size + softness)
+	pos = size + softness;
 }
