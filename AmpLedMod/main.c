@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------- Static declarations
 
 static color_t leds[MAX_LEDS];		/**< Array of colors for each physical rgb led. */
-static uint8_t numLeds = 39;		/**< Actual number of ws2812b physical leds. */
+static uint8_t numLeds = 21;		/**< Actual number of ws2812b physical leds. */
 
 static void handleFrame(frame_t *frame);
 
@@ -48,7 +48,7 @@ int main(void)
 			/* New frame received. */
 			handleFrame(&frame);
 		}
-		/* Delay to reach appropiate animation speed. */
+		/* Delay to reach appropriate animation speed. */
 		/* Minimum 50us is needed for ws2812b.*/
 		_delay_ms(2);
 	}
@@ -65,6 +65,7 @@ static void handleFrame(frame_t *frame)
 		break;
 		
 		case eSetAnimationColors:
+		seqSetColorCount(frame->data[0]);
 		for(int i = 0; i < frame->data[0]; i++)
 		{
 			seqSetColorRGB(i, frame->data[i*3+1], frame->data[i*3+2], frame->data[i*3+3]);

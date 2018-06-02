@@ -21,10 +21,11 @@ static void seqStaticColor(color_t *leds, int num_leds);
 static void seqRunning2(color_t *leds, int num_leds);
 static void seqParticles(color_t *leds, int num_leds);
 static void seqParticlesDark(color_t *leds, int num_leds);
+static void seqRunningParticle(color_t *leds, int num_leds);
 
-static uint8_t seqSpeed = 10;			/**< Sequence speed: 0-100. */
-static uint8_t seqSoftness = 10;		/**< Sequence softness: 0-100. */
-static uint8_t seqSize = 10;			/**< Sequence size: 0-20. */
+static uint8_t seqSpeed = 50;			/**< Sequence speed: 0-100. */
+static uint8_t seqSoftness = 5;		/**< Sequence softness: 0-100. */
+static uint8_t seqSize = 5;			/**< Sequence size: 0-20. */
 static uint8_t numColors = 7;			/**< Number of colors in sequences: 0-SEQ_MAX_COLORS. */
 
 /**
@@ -45,10 +46,11 @@ static seqFunction_t functions[eSeqCount] = {
 	seqStaticColor,
 	seqRunning2,
 	seqParticles,
-	seqParticlesDark
+	seqParticlesDark,
+	seqRunningParticle
 };
 
-static seqType_t seqType = eSeqParticles;	/**< Current animation type. */
+static seqType_t seqType = eSeqRunningParticle;	/**< Current animation type. */
 
 // ----------------------------------------------------------------------- Definitions
 
@@ -96,11 +98,7 @@ void seqSetColorRGB(uint8_t i, uint8_t r, uint8_t g, uint8_t b)
 	if(i >= numColors)
 	return;
 	
-	color_t color;
-	color.rgb.r = r;
-	color.rgb.b = b;
-	color.rgb.g = g;
-	colors[i] = color.val;
+	colors[i] = (int32_t)r | ((int32_t)g<<8) | ((int32_t)b<<16);
 }
 
 void seqSetColors(uint32_t *c, uint8_t num)
@@ -127,88 +125,82 @@ void seqSetColorCount(uint8_t num)
 
 static void seqPingPongFunc(color_t *leds, int num_leds)
 {
-	static int8_t led_i = 0;
+	static float pos = 0;
 	static int8_t led_dir = 0;
 	static uint8_t color_i = 0;
-	static uint8_t timer = 0;
 	
 	uint8_t softness = seqSoftness;
+	float speed = seqSpeed / 100.0f;
 	
-	timer++;
-	if(timer < 100/seqSpeed) return;
-	else timer = 0;
-	
-	for(int i = 0; i < softness; i++)
+	for(int i = 0; i < num_leds; i++)
 	{
-		float k = (float)(i+1)/softness;
-		k=k*k;
+		float k;
 		if(!led_dir) {
-			if(led_i-i < 0 || led_i-i >= num_leds) continue;
-			leds[led_i-i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.r;
-			leds[led_i-i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.g;
-			leds[led_i-i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.b;
+			if(i < pos) k = 1.0f;
+			else if(i < pos + softness) k = 1.0f - (i-pos) / (softness);
+			else k = 0.0f;
 		}
 		else {
-			if(led_i+i >= num_leds || led_i+i < 0) continue;
-			leds[led_i+i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.r;
-			leds[led_i+i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.g;
-			leds[led_i+i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.b;
+			if(i >= pos) k = 1.0f;
+			else if(i >= pos - softness) k = 1.0f - (pos-i) / (softness);
+			else k = 0.0f;
 		}
+		
+		//k=k*k;
+		leds[i].rgb.r = k*((colors[(color_i+1)%numColors]>>0)&0xFF) + (1.0f-k)*((colors[color_i]>>0)&0xFF);
+		leds[i].rgb.g = k*((colors[(color_i+1)%numColors]>>8)&0xFF) + (1.0f-k)*((colors[color_i]>>8)&0xFF);
+		leds[i].rgb.b = k*((colors[(color_i+1)%numColors]>>16)&0xFF) + (1.0f-k)*((colors[color_i]>>16)&0xFF);
 	}
 	
-	if(led_dir) led_i--;
-	else led_i++;
-	if(led_i >= num_leds + softness || led_i < -softness) {
+	if(!led_dir) pos += speed;
+	else pos -= speed;
+	if(pos >= num_leds + softness || pos < -softness) {
 		color_i = (color_i+1)%numColors;
 		led_dir = led_dir == 1 ? 0 : 1;
-		led_i = 0 + led_dir*num_leds-1;
+		if(!led_dir) pos = -softness;
+		else pos = num_leds + softness - 1;
 	}
 }
 
 static void seqDoublePingPongFunc(color_t *leds, int num_leds)
 {
-	static int8_t led_i = 0;
+	static float pos = 0;
 	static int8_t led_dir = 0;
 	static uint8_t color_i = 0;
-	static uint8_t timer = 0;
 	
 	uint8_t softness = seqSoftness;
+	float speed = seqSpeed / 100.0f;
 	
-	timer++;
-	if(timer < 100/seqSpeed) return;
-	else timer = 0;
-	
-	for(int i = 0; i < softness; i++)
+	for(int i = 0; i < num_leds / 2 + 1; i++)
 	{
-		float k = (float)(i+1)/softness;
+		float k;
 		if(!led_dir) {
-			if(led_i-i < 0 || led_i-i > num_leds/2) continue;
-			leds[led_i-i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.r;
-			leds[led_i-i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.g;
-			leds[led_i-i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[led_i-i].rgb.b;
-			
-			leds[num_leds-1-led_i+i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i+i].rgb.r;
-			leds[num_leds-1-led_i+i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i+i].rgb.g;
-			leds[num_leds-1-led_i+i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i+i].rgb.b;
+			if(i < pos) k = 1.0f;
+			else if(i < pos + softness) k = 1.0f - (i-pos) / (softness);
+			else k = 0.0f;
 		}
 		else {
-			if(led_i+i > num_leds/2 || led_i+i < 0) continue;
-			leds[led_i+i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.r;
-			leds[led_i+i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.g;
-			leds[led_i+i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[led_i+i].rgb.b;
-			
-			leds[num_leds-1-led_i-i].rgb.r = k*((colors[color_i]>>0)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i-i].rgb.r;
-			leds[num_leds-1-led_i-i].rgb.g = k*((colors[color_i]>>8)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i-i].rgb.g;
-			leds[num_leds-1-led_i-i].rgb.b = k*((colors[color_i]>>16)&0xFF) + (1.0f-k)*leds[num_leds-1-led_i-i].rgb.b;
+			if(i >= pos) k = 1.0f;
+			else if(i >= pos - softness) k = 1.0f - (pos-i) / (softness);
+			else k = 0.0f;
 		}
+		
+		leds[i].rgb.r = k*((colors[(color_i+1)%numColors]>>0)&0xFF) + (1.0f-k)*((colors[color_i]>>0)&0xFF);
+		leds[i].rgb.g = k*((colors[(color_i+1)%numColors]>>8)&0xFF) + (1.0f-k)*((colors[color_i]>>8)&0xFF);
+		leds[i].rgb.b = k*((colors[(color_i+1)%numColors]>>16)&0xFF) + (1.0f-k)*((colors[color_i]>>16)&0xFF);
+		
+		leds[num_leds-i-1].rgb.r = k*((colors[(color_i+1)%numColors]>>0)&0xFF) + (1.0f-k)*((colors[color_i]>>0)&0xFF);
+		leds[num_leds-i-1].rgb.g = k*((colors[(color_i+1)%numColors]>>8)&0xFF) + (1.0f-k)*((colors[color_i]>>8)&0xFF);
+		leds[num_leds-i-1].rgb.b = k*((colors[(color_i+1)%numColors]>>16)&0xFF) + (1.0f-k)*((colors[color_i]>>16)&0xFF);
 	}
 	
-	if(led_dir) led_i--;
-	else led_i++;
-	if(led_i >= num_leds/2 + softness || led_i < -softness) {
+	if(!led_dir) pos += speed;
+	else pos -= speed;
+	if(pos >= (num_leds/2+1) + softness || pos < -softness) {
 		color_i = (color_i+1)%numColors;
 		led_dir = led_dir == 1 ? 0 : 1;
-		led_i = 0 + led_dir*num_leds/2-1;
+		if(!led_dir) pos = -softness;
+		else pos = (num_leds/2+1) + softness - 1;
 	}
 }
 
@@ -386,4 +378,36 @@ static void seqParticlesDark(color_t *leds, int num_leds)
 			decremented = 0;
 		}
 	}
+}
+
+static void seqRunningParticle(color_t *leds, int num_leds)
+{
+	static float pos = 0;
+	static uint8_t color_id = 0;
+	
+	float speed = seqSpeed / 1000.0f;
+	uint8_t size = seqSize;
+	uint8_t softness = seqSoftness;
+	
+	for(int i = 0; i < num_leds; i++)
+	{
+		int p = (int)(pos+size) % num_leds;
+		if((i >= (int)pos && i < (int)(pos+size)) ||
+			((int)(pos+size) > num_leds && i < p))
+		{
+			leds[i].rgb.r = ((colors[color_id]>>0)&0xFF);
+			leds[i].rgb.g = ((colors[color_id]>>8)&0xFF);
+			leds[i].rgb.b = ((colors[color_id]>>16)&0xFF);
+		}
+		else
+		{
+			leds[i].rgb.r = 0;
+			leds[i].rgb.g = 0;
+			leds[i].rgb.b = 0;
+		}
+	}
+	
+	pos += speed;
+	if(pos >= num_leds)
+		pos = 0;
 }

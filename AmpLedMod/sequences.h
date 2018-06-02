@@ -38,6 +38,7 @@ typedef enum
 	eSeqRunning2,
 	eSeqParticles,
 	eSeqParticlesDark,
+	eSeqRunningParticle,
 	eSeqCount /**< Specifies the number of animations. Must be at the end. */
 } seqType_t;
 
