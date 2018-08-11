@@ -21,7 +21,7 @@
 #define SEQ_MAX_SIZE			(20)		/**< Maximum animation size value. */
 #define SEQ_MIN_SIZE			(0)			/**< Minimum animation size value. */
 
-typedef void (*seqFunction_t)(color_t*, int);
+typedef void (*seqFunction_t)(color_t*, const int);
 
 // ----------------------------------------------------------------------- Structures
 

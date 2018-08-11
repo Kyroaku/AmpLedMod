@@ -14,7 +14,7 @@ void wsInit()
 	WS_DDR |= WS_BIT;
 }
 
-void wsSend(color_t *leds, int num_leds)
+void wsSend(color_t *leds, const int num_leds)
 {
 	for(uint8_t j = 0; j < num_leds; j++)
 	{

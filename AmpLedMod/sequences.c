@@ -13,15 +13,15 @@
 
 // ----------------------------------------------------------------------- Static declarations
 
-static void seqPingPongFunc(color_t *leds, int num_leds);
-static void seqDoublePingPongFunc(color_t *leds, int num_leds);
-static void seqFadeFunc(color_t *leds, int num_leds);
-static void seqSoftSwitchFunc(color_t *leds, int num_leds);
-static void seqStaticColor(color_t *leds, int num_leds);
-static void seqRunning2(color_t *leds, int num_leds);
-static void seqParticles(color_t *leds, int num_leds);
-static void seqParticlesDark(color_t *leds, int num_leds);
-static void seqRunningParticle(color_t *leds, int num_leds);
+static void seqPingPongFunc(color_t *leds, const int num_leds);
+static void seqDoublePingPongFunc(color_t *leds, const int num_leds);
+static void seqFadeFunc(color_t *leds,const  int num_leds);
+static void seqSoftSwitchFunc(color_t *leds, const int num_leds);
+static void seqStaticColor(color_t *leds, const int num_leds);
+static void seqRunning2(color_t *leds, const int num_leds);
+static void seqParticles(color_t *leds, const int num_leds);
+static void seqParticlesDark(color_t *leds, const int num_leds);
+static void seqRunningParticle(color_t *leds, const int num_leds);
 
 static uint8_t seqSpeed = 50;			/**< Sequence speed: 0-100. */
 static uint8_t seqSoftness = 3;		/**< Sequence softness: 0-100. */
@@ -123,14 +123,14 @@ void seqSetColorCount(uint8_t num)
 
 // ----------------------------------------------------------------------- Static definitions
 
-static void seqPingPongFunc(color_t *leds, int num_leds)
+static void seqPingPongFunc(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	static int8_t led_dir = 0;
 	static uint8_t color_i = 0;
 	
 	uint8_t softness = seqSoftness;
-	float speed = seqSpeed / 100.0f;
+	float speed = seqSpeed / 50.0f;
 	
 	for(int i = 0; i < num_leds; i++)
 	{
@@ -147,9 +147,11 @@ static void seqPingPongFunc(color_t *leds, int num_leds)
 		}
 		
 		//k=k*k;
-		leds[i].rgb.r = k*((colors[(color_i+1)%numColors]>>0)&0xFF) + (1.0f-k)*((colors[color_i]>>0)&0xFF);
-		leds[i].rgb.g = k*((colors[(color_i+1)%numColors]>>8)&0xFF) + (1.0f-k)*((colors[color_i]>>8)&0xFF);
-		leds[i].rgb.b = k*((colors[(color_i+1)%numColors]>>16)&0xFF) + (1.0f-k)*((colors[color_i]>>16)&0xFF);
+		uint32_t color0 = colors[color_i];
+		uint32_t color1 = colors[color_i+1 < numColors ? color_i+1 : 0];
+		leds[i].rgb.r = k*((color1>>0)&0xFF) + (1.0f-k)*((color0>>0)&0xFF);
+		leds[i].rgb.g = k*((color1>>8)&0xFF) + (1.0f-k)*((color0>>8)&0xFF);
+		leds[i].rgb.b = k*((color1>>16)) + (1.0f-k)*((color0>>16));
 	}
 	
 	if(!led_dir) pos += speed;
@@ -162,7 +164,7 @@ static void seqPingPongFunc(color_t *leds, int num_leds)
 	}
 }
 
-static void seqDoublePingPongFunc(color_t *leds, int num_leds)
+static void seqDoublePingPongFunc(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	static int8_t led_dir = 0;
@@ -204,7 +206,7 @@ static void seqDoublePingPongFunc(color_t *leds, int num_leds)
 	}
 }
 
-static void seqFadeFunc(color_t *leds, int num_leds)
+static void seqFadeFunc(color_t *leds, const int num_leds)
 {
 	static uint8_t color_i = 0;
 	static int8_t led_dir = 0;
@@ -232,7 +234,7 @@ static void seqFadeFunc(color_t *leds, int num_leds)
 	}
 }
 
-static void seqSoftSwitchFunc(color_t *leds, int num_leds)
+static void seqSoftSwitchFunc(color_t *leds, const int num_leds)
 {
 	static uint8_t color_i = 0;
 	static float k = 0.0f;
@@ -253,13 +255,17 @@ static void seqSoftSwitchFunc(color_t *leds, int num_leds)
 	}
 }
 
-static void seqStaticColor(color_t *leds, int num_leds)
+static void seqStaticColor(color_t *leds, const int num_leds)
 {
 	for(int i = 0; i < num_leds; i++)
-	leds[i].val = colors[0];
+	{
+		leds[i].rgb.r = colors[0]&0xFF;
+		leds[i].rgb.g = (colors[0]>>8)&0xFF;
+		leds[i].rgb.b = (colors[0]>>16)&0xFF;
+	}
 }
 
-static void seqRunning2(color_t *leds, int num_leds)
+static void seqRunning2(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	
@@ -281,7 +287,7 @@ static void seqRunning2(color_t *leds, int num_leds)
 	pos -= 2*M_PI;
 }
 
-static void seqParticles(color_t *leds, int num_leds)
+static void seqParticles(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	static int length = 0;
@@ -330,7 +336,7 @@ static void seqParticles(color_t *leds, int num_leds)
 	}
 }
 
-static void seqParticlesDark(color_t *leds, int num_leds)
+static void seqParticlesDark(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	static int length = 0;
@@ -380,7 +386,7 @@ static void seqParticlesDark(color_t *leds, int num_leds)
 	}
 }
 
-static void seqRunningParticle(color_t *leds, int num_leds)
+static void seqRunningParticle(color_t *leds, const int num_leds)
 {
 	static float pos = 0;
 	static uint8_t color_id = 0;

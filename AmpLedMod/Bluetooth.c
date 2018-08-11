@@ -28,7 +28,7 @@ int8_t bluetoothGetFrame(void *frame, uint8_t max_len)
 		return 0;
 	}
 	
-	/* We need to read first to bytes, to know length of the frame. */
+	/* We need to read first two bytes, to know length of the frame. */
 	while(len >= 2)
 	{
 		/* Look for start byte. */

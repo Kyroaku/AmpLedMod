@@ -35,6 +35,6 @@ typedef union
 // ----------------------------------------------------------------------- Declarations
 
 void wsInit();
-void wsSend(color_t *leds, int num_leds);
+void wsSend(color_t *leds, const int num_leds);
 
 #endif /* WS2812B_H_ */
