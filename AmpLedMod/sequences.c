@@ -11,6 +11,10 @@
 
 // ----------------------------------------------------------------------- Defines
 
+#define abs(x) ((x) < 0.0f ? -(x) : (x))
+
+#define seqSin(a) (abs(fmod(a, 4) - 2.0f) - 1.0f)
+
 // ----------------------------------------------------------------------- Static declarations
 
 static void seqPingPongFunc(color_t *leds, const int num_leds);
@@ -23,16 +27,16 @@ static void seqParticles(color_t *leds, const int num_leds);
 static void seqParticlesDark(color_t *leds, const int num_leds);
 static void seqRunningParticle(color_t *leds, const int num_leds);
 
-static uint8_t seqSpeed = 50;			/**< Sequence speed: 0-100. */
+static uint8_t seqSpeed = 100;			/**< Sequence speed: 0-100. */
 static uint8_t seqSoftness = 3;		/**< Sequence softness: 0-100. */
-static uint8_t seqSize = 2;			/**< Sequence size: 0-20. */
+static uint8_t seqSize = 4;			/**< Sequence size: 0-20. */
 static uint8_t numColors = 7;			/**< Number of colors in sequences: 0-SEQ_MAX_COLORS. */
 
 /**
 * Array of colors used in animations.
 */
 static uint32_t colors[SEQ_MAX_COLORS] = {
-	0x00FF00, 0x00FFFF, 0x0000FF, 0xFFFF00, 0xFF0000, 0xFF00FF, 0xFFFFFF
+	0x0000FF, 0x00FF00, 0xFF0000, 0x00FFFF, 0xFFFF00, 0xFF00FF, 0xFFFFFF
 };
 
 /**
@@ -50,7 +54,7 @@ static seqFunction_t functions[eSeqCount] = {
 	seqRunningParticle
 };
 
-static seqType_t seqType = eSeqRunningParticle;	/**< Current animation type. */
+static seqType_t seqType = eSeqRunning2;	/**< Current animation type. */
 
 // ----------------------------------------------------------------------- Definitions
 
@@ -272,19 +276,24 @@ static void seqRunning2(color_t *leds, const int num_leds)
 	float speed = seqSpeed / 500.0f;
 	float size = seqSize;
 	
+	uint8_t *color1 = (uint8_t*)&colors[0];
+	uint8_t *color2 = (uint8_t*)&colors[1];
+	
+	float k, k2, a;
+	
 	for(int i = 0; i < num_leds; i++)
 	{
-		float a = i*(1.0f/size)+pos;
-		float k = (sin(a)+1.0f) * 0.5f;
-		
-		leds[i].rgb.r = k*((colors[0]>>0)&0xFF) +  (1.0f-k)*((colors[1]>>0)&0xFF);
-		leds[i].rgb.g = k*((colors[0]>>8)&0xFF) +  (1.0f-k)*((colors[1]>>8)&0xFF);
-		leds[i].rgb.b = k*((colors[0]>>16)&0xFF) +  (1.0f-k)*((colors[1]>>16)&0xFF);
+		a = i/size+pos;
+		k = (seqSin(a)+1.0f) * 0.5f;
+		k2 = 1.0f-k;
+		leds[i].rgb.r = k*color1[0] + k2*color2[0];
+		leds[i].rgb.g = k*color1[1] + k2*color2[1];
+		leds[i].rgb.b = k*color1[2] + k2*color2[2];
 	}
 	
 	pos += speed;
-	if(pos > 2*M_PI)
-	pos -= 2*M_PI;
+	if(pos > 4)
+	pos -= 4;
 }
 
 static void seqParticles(color_t *leds, const int num_leds)

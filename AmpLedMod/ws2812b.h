@@ -23,13 +23,13 @@
 
 typedef struct
 {
-	uint_fast8_t b, r, g;
+	uint8_t b, r, g;
 } rgb_t;
 
 typedef union
 {
 	rgb_t rgb;
-	uint_fast32_t val;
+	uint32_t val;
 } color_t;
 
 // ----------------------------------------------------------------------- Declarations

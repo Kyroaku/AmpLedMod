@@ -22,7 +22,7 @@
 // ----------------------------------------------------------------------- Static declarations
 
 static color_t leds[MAX_LEDS];		/**< Array of colors for each physical rgb led. */
-static uint8_t numLeds = 21;		/**< Actual number of ws2812b physical leds. */
+static uint8_t numLeds = 120;		/**< Actual number of ws2812b physical leds. */
 
 static void loadSettings();
 
@@ -86,13 +86,13 @@ void loadSettings() {
 	if(val > 0 && val <= MAX_LEDS) numLeds = val;
 	
 	val = eeprom_read_byte(EEPROM_SPEED_ADDRESS);
-	if(val > 0 && val <= SEQ_MAX_SPEED) seqSetSpeed(val);
+	if(val >= SEQ_MIN_SPEED && val <= SEQ_MAX_SPEED) seqSetSpeed(val);
 	
 	val = eeprom_read_byte(EEPROM_SOFTNESS_ADDRESS);
-	if(val > 0 && val <= SEQ_MAX_SOFTNESS) seqSetSoftness(val);
+	if(val >= SEQ_MIN_SOFTNESS && val <= SEQ_MAX_SOFTNESS) seqSetSoftness(val);
 	
 	val = eeprom_read_byte(EEPROM_SIZE_ADDRESS);
-	if(val > 0 && val <= SEQ_MAX_SIZE) seqSetSize(val);
+	if(val >= SEQ_MIN_SIZE && val <= SEQ_MAX_SIZE) seqSetSize(val);
 	
 	val = eeprom_read_byte(EEPROM_COLORS_COUNT_ADDRESS);
 	if(val > 0 && val <= SEQ_MAX_COLORS) {
