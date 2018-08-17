@@ -47,6 +47,21 @@ int main(void)
 	
 	loadSettings();
 	
+	for(int i = 0; i < numLeds; i++) {
+		if(i%3 == 0) {
+			leds[i].rgb.g = leds[i].rgb.b = 0;
+			leds[i].rgb.r = 255;
+		}
+		else if(i%3 == 1) {
+			leds[i].rgb.r = leds[i].rgb.b = 0;
+			leds[i].rgb.g = 255;
+		}
+		else {
+			leds[i].rgb.r = leds[i].rgb.g = 0;
+			leds[i].rgb.b = 255;
+		}
+	}
+	
 	while (1)
 	{
 		/* Send colors to ws2812b leds. */

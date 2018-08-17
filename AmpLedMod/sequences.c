@@ -13,7 +13,8 @@
 
 #define abs(x) ((x) < 0.0f ? -(x) : (x))
 
-#define seqSin(a) (abs(fmod(a, 4) - 2.0f) - 1.0f)
+//#define seqSin(a) (abs(fmod(a, 4) - 2.0f) - 1.0f)
+#define seqSin(a) (sin(a))
 
 // ----------------------------------------------------------------------- Static declarations
 
@@ -29,7 +30,7 @@ static void seqRunningParticle(color_t *leds, const int num_leds);
 
 static uint8_t seqSpeed = 100;			/**< Sequence speed: 0-100. */
 static uint8_t seqSoftness = 3;		/**< Sequence softness: 0-100. */
-static uint8_t seqSize = 4;			/**< Sequence size: 0-20. */
+static uint8_t seqSize = 2;			/**< Sequence size: 0-20. */
 static uint8_t numColors = 7;			/**< Number of colors in sequences: 0-SEQ_MAX_COLORS. */
 
 /**
@@ -280,10 +281,11 @@ static void seqRunning2(color_t *leds, const int num_leds)
 	uint8_t *color2 = (uint8_t*)&colors[1];
 	
 	float k, k2, a;
+	float inv_size = 1.0f/size;
 	
-	for(int i = 0; i < num_leds; i++)
+	for(uint8_t i = 0; i < num_leds; i++)
 	{
-		a = i/size+pos;
+		a = i*inv_size+pos;
 		k = (seqSin(a)+1.0f) * 0.5f;
 		k2 = 1.0f-k;
 		leds[i].rgb.r = k*color1[0] + k2*color2[0];
@@ -292,8 +294,8 @@ static void seqRunning2(color_t *leds, const int num_leds)
 	}
 	
 	pos += speed;
-	if(pos > 4)
-	pos -= 4;
+	if(pos > 2*M_PI)
+	pos -= 2*M_PI;
 }
 
 static void seqParticles(color_t *leds, const int num_leds)

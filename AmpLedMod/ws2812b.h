@@ -17,7 +17,7 @@
 
 #define WS_DDR		(DDRD)
 #define WS_PORT		(PORTD)
-#define WS_BIT		(1<<PD3)
+#define WS_BIT		(8)
 
 // ----------------------------------------------------------------------- Structures
 
